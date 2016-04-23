@@ -3,6 +3,14 @@
 
 #include <cmath>
 #include <stdlib.h>
+#include <iostream>
+
+
+#include <QLinkedList>
+#include <QTextStream>
+#include <QFile>
+#include <QDebug>
+#include <QVector>
 
 # define PI 3.14159265358979323846  /* pi */
 

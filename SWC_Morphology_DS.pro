@@ -17,9 +17,13 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     node.cpp \
-    compartment.cpp
+    compartment.cpp \
+    segment.cpp \
+    tubetree.cpp
 
 HEADERS += \
     node.h \
     common.h \
-    compartment.h
+    compartment.h \
+    segment.h \
+    tubetree.h

@@ -1,7 +1,15 @@
-#include "node.h"
-#include "compartment.h"
+#include "common.h"
+#include "tubetree.h"
 
 int main()
 {
-  return EXIT_SUCCESS;
+    std::string str;
+    qDebug() << "Enter the name of swc file with path: " << endl;
+    std::getline(std::cin, str);
+    QString filename(str.c_str());
+
+    TubeTree tubetree(filename);
+    qDebug() <<"Read the swc file into nodes";
+
+    return EXIT_SUCCESS;
 }
