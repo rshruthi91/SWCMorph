@@ -1,21 +1,26 @@
 #ifndef TUBETREE_H
 #define TUBETREE_H
 
-#include "segment.h"
+#include "segmentlist.h"
 //#include "node.h"
 //#include "compartment.h"
 
 class TubeTree
 {
 private:
-    Segment *soma;//If this exists. It is the head of the neuron tree
     //QVector<Node> NodeList;
     QString infilepath;
 public:
-    QVector<Node> NodeList; //for checking and understanding
+    //Use qDeleteAll for the following
+    QVector<Node*> NodeList; //for checking and understanding
+    QVector<Compartment*> CompartmentList;
+    QVector<Segment*> Segments;
+    QVector<SegmentList*> Trees;
     TubeTree();
     TubeTree(QString swcfile);
     bool SWCReadNodes();
+    bool makeCompartments();
+    void makeSegments();
 };
 
 #endif // TUBETREE_H

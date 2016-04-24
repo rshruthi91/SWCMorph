@@ -2,4 +2,5 @@
 
 Segment::Segment()
 {
+    this->CompartmentList.clear();
 }

@@ -8,7 +8,18 @@ TubeTree::TubeTree()
 TubeTree::TubeTree(QString swcfile)
 {
     this->infilepath = swcfile;
-    SWCReadNodes();
+    if(!SWCReadNodes()){
+        NodeList.clear();
+        CompartmentList.clear();
+        throw std::exception();
+    }
+    if(!makeCompartments()){
+        NodeList.clear();
+        CompartmentList.clear();
+        throw std::exception();
+    }
+
+    makeSegments();
 }
 
  bool TubeTree::SWCReadNodes(){
@@ -20,19 +31,77 @@ TubeTree::TubeTree(QString swcfile)
      QTextStream swchandle(&file);
 
      while(!swchandle.atEnd()){
-         Node swcnode;
+         Node *swcnode = new Node;
          QString swcline = swchandle.readLine();
          QStringList swcnodeparams = swcline.split(" ",QString::SkipEmptyParts);
          if(swcnodeparams[0] != "#"){
-             swcnode.setID(swcnodeparams[0].toInt());
-             swcnode.setType(swcnodeparams[1].toInt());
-             swcnode.setposX(swcnodeparams[2].toDouble());
-             swcnode.setposY(swcnodeparams[3].toDouble());
-             swcnode.setposZ(swcnodeparams[4].toDouble());
-             swcnode.setRadius(swcnodeparams[5].toDouble());
-             swcnode.setPID(swcnodeparams[6].toInt());
+             swcnode->setID(swcnodeparams[0].toInt());
+             swcnode->setType(swcnodeparams[1].toInt());
+             swcnode->setposX(swcnodeparams[2].toDouble());
+             swcnode->setposY(swcnodeparams[3].toDouble());
+             swcnode->setposZ(swcnodeparams[4].toDouble());
+             swcnode->setRadius(swcnodeparams[5].toDouble());
+             swcnode->setPID(swcnodeparams[6].toInt());
+             if(swcnode->getPID() == -1) swcnode->setRoot(true);
          } else continue;
          this->NodeList.append(swcnode);
      }
      return true;
 }
+
+ bool TubeTree::makeCompartments() {
+     int num_bifs = 0;
+     foreach(Node* swcnode, this->NodeList) {
+         foreach(Node* nextnode, this->NodeList) {
+             if(nextnode->getPID() == swcnode->getID()) {
+                 num_bifs++;
+                 if(num_bifs > 2 && (swcnode->getType()!= 1)){
+                     qDebug() << "Trifurcation found - unsupported";
+                     qDebug() << "Node number: " << swcnode->getID();
+                     return false;
+                 }
+                 Compartment* c = new Compartment;
+                 c->setStart(swcnode);
+                 c->setEnd(nextnode);
+                 CompartmentList.append(c);
+             }
+         }
+         if(num_bifs == 0) {
+             swcnode->setTerminal(true);
+         }
+         else {
+             CompartmentList.last()->getStart()->setNBifs(num_bifs);
+             if(num_bifs > 1)
+                 CompartmentList.last()->getStart()->setBranch(true);
+         }
+         num_bifs = 0;
+     }
+     return true;
+ }
+
+ void TubeTree::makeSegments() {
+     QVector<Compartment*> traversedCompartments;
+     foreach(Compartment* comp, this->CompartmentList) {
+         Segment* s = new Segment;
+         if(
+                 comp->getStart()->isBranch()||
+                 comp->getStart()->isRoot()
+                 )
+         {
+             if(traversedCompartments.count(comp) >= comp->getStart()->getNBifs()) continue;
+             s->addCompartment(comp);
+             traversedCompartments.append(comp);
+             Compartment* prev_comp = comp;
+             //constructing compartments of the segment
+             foreach(Compartment* innercomp,this->CompartmentList) {
+                 Compartment* curr_comp = innercomp;
+                 if(curr_comp->getStart() == prev_comp->getEnd()) {
+                     if(innercomp->getStart()->isBranch()) break;
+                     s->addCompartment(innercomp);
+                     prev_comp = innercomp;
+                 }
+             }
+             this->Segments.append(s);
+         } else delete(s);
+     }
+ }

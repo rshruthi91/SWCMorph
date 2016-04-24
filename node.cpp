@@ -24,6 +24,7 @@ Node::Node()
     this->branch = false;
     this->root = false;
     this->terminal = false;
+    this->num_bifs = 0;
 }
 
 double Node::eucldist(Node *toNode) {

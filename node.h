@@ -24,6 +24,7 @@ protected:
   bool branch;
   bool root;
   bool terminal;
+  int num_bifs;
 
 public:
   //Functions to manipulate internal variables
@@ -40,6 +41,7 @@ public:
   inline double getY() {return this->y;}
   inline double getZ() {return this->z;}
   inline double getRadius() {return this->radius;}
+  inline int getNBifs() {return this->num_bifs;}
   inline int getType() {return this->type;}
   inline int getID()   {return this->id;}
   inline int getPID()  {return this->pid;}
@@ -53,6 +55,7 @@ public:
   inline void setBranch(bool br)     {this->branch = br;}
   inline void setRoot(bool rt)       {this->root = rt;}
   inline void setTerminal(bool term) {this->terminal = term;}
+  inline void setNBifs(int nbifs) {this->num_bifs = nbifs;}
 
   //Get the Euclidean distance to another node
   double eucldist(Node *toNode);

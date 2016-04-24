@@ -6,11 +6,22 @@
 class Segment
 {
 private:
-    QLinkedList<Compartment> CompartmentList;
-    Node *startNode;
-    Node *endNode;
+    //Use qdeleteall to avoid memory leaks
+    QLinkedList<Compartment*> CompartmentList;
 public:
     Segment();
+
+    inline Compartment* getStart(){
+        if(CompartmentList.isEmpty()) return NULL;
+        else return this->CompartmentList.first();
+    }
+    inline Compartment* getEnd(){
+        if(CompartmentList.isEmpty()) return NULL;
+        else return this->CompartmentList.last();
+    }
+    inline void addCompartment(Compartment* comp){
+        CompartmentList.append(comp);
+    }
 };
 
 #endif // SEGMENT_H
