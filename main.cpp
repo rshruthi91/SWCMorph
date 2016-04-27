@@ -11,5 +11,9 @@ int main()
     TubeTree tubetree(filename);
     qDebug() <<"Read the swc file into nodes";
 
-    return EXIT_SUCCESS;
+    QString outputvtkfile = "C:/Users/Shruthi/Desktop/M3R.vtk";
+    if(tubetree.writeVtkPoly(outputvtkfile)) {
+        qDebug() << "Wrote VTK file";
+        return EXIT_SUCCESS;
+    }else return EXIT_FAILURE;
 }
