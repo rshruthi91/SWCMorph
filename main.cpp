@@ -7,7 +7,6 @@ int main()
     qDebug() << "Enter the name of swc file with path: " << endl;
     std::getline(std::cin, str);
     QString filename(str.c_str());
-    QString nameString;
     QFileInfo fi(filename);
 
     TubeTree tubetree(filename);
