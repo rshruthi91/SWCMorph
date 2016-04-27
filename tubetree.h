@@ -1,26 +1,37 @@
 #ifndef TUBETREE_H
 #define TUBETREE_H
 
-#include "segmentlist.h"
-//#include "node.h"
-//#include "compartment.h"
+#include "segment.h"
+
+typedef QLinkedList<Segment*> Path;
 
 class TubeTree
 {
 private:
     //QVector<Node> NodeList;
     QString infilepath;
+    bool populated;
+    QString vtk_major_version = "2";
+    QString vtk_minor_version = "0";
 public:
     //Use qDeleteAll for the following
-    QVector<Node*> NodeList; //for checking and understanding
+    QMap<int,Node*> NodeList; //for checking and understanding
     QVector<Compartment*> CompartmentList;
     QVector<Segment*> Segments;
-    QVector<SegmentList*> Trees;
+    QVector<Segment*> RootSegList;
+    QVector<Path> Paths;
+    int num_trees;
+
     TubeTree();
     TubeTree(QString swcfile);
     bool SWCReadNodes();
     bool makeCompartments();
     void makeSegments();
+    void getRootSegments();
+    void connectSegments();
+    bool writeVtkPoly(QString filename);
+
+    inline bool isPopulated(){return this->populated;}
 };
 
 #endif // TUBETREE_H
