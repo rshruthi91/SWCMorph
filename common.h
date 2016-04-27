@@ -11,6 +11,7 @@
 #include <QFile>
 #include <QDebug>
 #include <QVector>
+#include <QFileInfo>
 
 # define PI 3.14159265358979323846  /* pi */
 
