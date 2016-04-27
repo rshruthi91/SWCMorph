@@ -2,12 +2,32 @@
 
 TubeTree::TubeTree()
 {
+    this->num_trees = 0;
+    this->infilepath ="";
+    qDeleteAll(this->NodeList);
+    this->NodeList.clear();
+    qDeleteAll(this->CompartmentList);
+    this->CompartmentList.clear();
+    qDeleteAll(this->Segments);
+    this->Segments.clear();
+    qDeleteAll(this->RootSegList);
+    this->RootSegList.clear();
     qDebug() << "This is not a supported use yet. It is just a placeholder!";
 }
 
 TubeTree::TubeTree(QString swcfile)
 {
+    this->populated = false;
+    this->num_trees = 0;
     this->infilepath = swcfile;
+    qDeleteAll(this->NodeList);
+    this->NodeList.clear();
+    qDeleteAll(this->CompartmentList);
+    this->CompartmentList.clear();
+    qDeleteAll(this->Segments);
+    this->Segments.clear();
+    qDeleteAll(this->RootSegList);
+    this->RootSegList.clear();
     if(!SWCReadNodes()){
         NodeList.clear();
         CompartmentList.clear();
@@ -20,6 +40,12 @@ TubeTree::TubeTree(QString swcfile)
     }
 
     makeSegments();
+    getRootSegments();
+    connectSegments();
+    foreach(Segment* s, this->Segments){
+        s->updateParams();
+    }
+    this->populated = true;
 }
 
  bool TubeTree::SWCReadNodes(){
@@ -42,9 +68,12 @@ TubeTree::TubeTree(QString swcfile)
              swcnode->setposZ(swcnodeparams[4].toDouble());
              swcnode->setRadius(swcnodeparams[5].toDouble());
              swcnode->setPID(swcnodeparams[6].toInt());
-             if(swcnode->getPID() == -1) swcnode->setRoot(true);
+             if(swcnode->getPID() == -1) {
+                 num_trees++;
+                 swcnode->setRoot(true);
+             }
          } else continue;
-         this->NodeList.append(swcnode);
+         this->NodeList.insert(swcnode->getID(),swcnode);
      }
      return true;
 }
@@ -104,4 +133,109 @@ TubeTree::TubeTree(QString swcfile)
              this->Segments.append(s);
          } else delete(s);
      }
+ }
+
+ void TubeTree::getRootSegments() {
+     foreach(Segment* s, this->Segments) {
+         if(s->CompartmentList.first()->getStart()->isRoot()) {
+             s->setRoot(true);
+             this->RootSegList.append(s);
+         }
+     }
+ }
+
+ void TubeTree::connectSegments(){
+     //Populate Children Segments
+     foreach(Segment*s , this->Segments) {
+         if( ( s->getChildren().isEmpty() &&
+              !(s->CompartmentList.last()->getEnd()->isTerminal())
+              ) ||
+             ( s->getParents().isEmpty() &&
+               !(s->CompartmentList.first()->getStart()->isRoot())
+              )
+            ) {
+             foreach(Segment* cs, this->Segments) {
+                 if(s->CompartmentList.last()->getEnd() ==
+                    cs->CompartmentList.first()->getStart()){
+                     s->addChild(cs);
+                 }
+                 if(s->CompartmentList.first()->getStart() ==
+                    cs->CompartmentList.last()->getEnd()){
+                     s->addParent(cs);
+                 }
+             }
+         }
+     }
+ }
+
+ bool TubeTree::writeVtkPoly(QString filename){
+     if(!(this->populated)) return false;
+     int size_of_lines = 0;
+     foreach(Segment* s, this->Segments) {
+         size_of_lines += s->CompartmentList.size();
+     }
+     //Now add the segments.size() for entry : numPoints of each lines field
+     //Also one more segments.size() for endPoint() of last compartment
+     size_of_lines += 2*this->Segments.size();
+     QFile file(filename);
+         file.open(QIODevice::WriteOnly | QIODevice::Text);
+     QTextStream vtkfile(&file);
+     //Write VTK Header
+     vtkfile << "# vtk DataFile Version "
+             << vtk_major_version << "."
+             << vtk_minor_version << endl;
+     vtkfile << "eXample File" <<endl; //Can be an input argument
+     vtkfile << "ASCII" << endl;
+
+     vtkfile <<endl;
+
+     vtkfile << "DATASET POLYDATA" <<endl;
+     vtkfile << "POINTS "
+             << this->NodeList.size()
+             << " double" << endl;
+     QVector<int> id_list;
+     QMap<int, Node*>::const_iterator iter;
+     for(iter = this->NodeList.begin();
+         iter != this->NodeList.end();
+         ++iter){
+         vtkfile << iter.value()->getX() << " "
+                 << iter.value()->getY() << " "
+                 << iter.value()->getZ() << endl;
+         id_list.append(iter.value()->getID());
+     }
+
+     vtkfile <<endl;
+
+     vtkfile << "LINES " << this->Segments.size()
+             << " " << size_of_lines << endl;
+     foreach(Segment* s, this->Segments) {
+         int numPoints=0;
+         QString Line="";
+         foreach(Compartment* c, s->CompartmentList) {
+             Line += QString::number(id_list.indexOf(c->getStart()->getID()));
+             Line += " ";
+             numPoints++;
+             if(c == s->CompartmentList.last() ){
+                 Line += QString::number(id_list.indexOf(c->getEnd()->getID()));
+                 numPoints++;
+                 vtkfile << numPoints << " " << Line << endl;
+                 Line = "";
+                 numPoints=0;
+             }
+         }
+     }
+
+     vtkfile <<endl;
+
+     vtkfile << "POINT_DATA " << this->NodeList.size() << endl;
+     vtkfile << "SCALARS Radius+Type double 2" <<endl;
+     vtkfile << "LOOKUP_TABLE default" <<endl;
+     for(iter = this->NodeList.begin();
+         iter != this->NodeList.end();
+         ++iter){
+         vtkfile << iter.value()->getRadius() << " "
+                 << iter.value()->getType() << endl;
+     }
+     file.close();
+     return true;
  }
