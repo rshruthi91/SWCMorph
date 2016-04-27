@@ -7,11 +7,13 @@ int main()
     qDebug() << "Enter the name of swc file with path: " << endl;
     std::getline(std::cin, str);
     QString filename(str.c_str());
+    QString nameString;
+    QFileInfo fi(filename);
 
     TubeTree tubetree(filename);
     qDebug() <<"Read the swc file into nodes";
 
-    QString outputvtkfile = "C:/Users/Shruthi/Desktop/M3R.vtk";
+    QString outputvtkfile = fi.absolutePath()+"/"+fi.baseName()+".vtk";
     if(tubetree.writeVtkPoly(outputvtkfile)) {
         qDebug() << "Wrote VTK file";
         return EXIT_SUCCESS;
