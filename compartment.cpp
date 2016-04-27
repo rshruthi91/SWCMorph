@@ -8,6 +8,7 @@ Compartment::Compartment(){
     this->cylVolume = 0.0;
     this->frstmSurface = 0.0;
     this->frstmVolume = 0.0;
+    this->paramsUptoDate = false;
 }
 
 void Compartment::updateParams() {
@@ -20,6 +21,7 @@ void Compartment::updateParams() {
     this->cylSurface = calc_cylSurface();
     this->frstmVolume = calc_frstmVolume();
     this->frstmSurface = calc_frstmSurface();
+    this->paramsUptoDate = true;
 }
 
 double Compartment::calc_cylVolume() {
