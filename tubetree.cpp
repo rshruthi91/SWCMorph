@@ -60,7 +60,7 @@ TubeTree::TubeTree(QString swcfile)
          Node *swcnode = new Node;
          QString swcline = swchandle.readLine();
          QStringList swcnodeparams = swcline.split(" ",QString::SkipEmptyParts);
-         if(swcnodeparams[0] != "#"){
+         if(swcnodeparams[0].at(0) != '#'){
              swcnode->setID(swcnodeparams[0].toInt());
              swcnode->setType(swcnodeparams[1].toInt());
              swcnode->setposX(swcnodeparams[2].toDouble());
@@ -84,11 +84,13 @@ TubeTree::TubeTree(QString swcfile)
          foreach(Node* nextnode, this->NodeList) {
              if(nextnode->getPID() == swcnode->getID()) {
                  num_bifs++;
-                 if(num_bifs > 2 && (swcnode->getType()!= 1)){
-                     qDebug() << "Trifurcation found - unsupported";
-                     qDebug() << "Node number: " << swcnode->getID();
-                     return false;
-                 }
+                 //I have to support trifurcations due to bad tracing algo inputs
+                 //Why do I not have my own traacing algo again?
+//                 if(num_bifs > 2 && (swcnode->getType()!= 1)){
+//                     qDebug() << "Trifurcation found - unsupported";
+//                     qDebug() << "Node number: " << swcnode->getID();
+//                     return false;
+//                 }
                  Compartment* c = new Compartment;
                  c->setStart(swcnode);
                  c->setEnd(nextnode);
