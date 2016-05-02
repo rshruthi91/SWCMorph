@@ -230,13 +230,19 @@ TubeTree::TubeTree(QString swcfile)
      vtkfile <<endl;
 
      vtkfile << "POINT_DATA " << this->NodeList.size() << endl;
-     vtkfile << "SCALARS Radius+Type double 2" <<endl;
+     vtkfile << "SCALARS Radius double" <<endl;
      vtkfile << "LOOKUP_TABLE default" <<endl;
      for(iter = this->NodeList.begin();
          iter != this->NodeList.end();
          ++iter){
-         vtkfile << iter.value()->getRadius() << " "
-                 << iter.value()->getType() << endl;
+         vtkfile << iter.value()->getRadius() << endl;
+     }
+     vtkfile << "SCALARS TypeID int" <<endl;
+     vtkfile << "LOOKUP_TABLE default" <<endl;
+     for(iter = this->NodeList.begin();
+         iter != this->NodeList.end();
+         ++iter){
+         vtkfile << iter.value()->getType() << endl;
      }
      file.close();
      return true;
