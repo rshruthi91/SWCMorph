@@ -9,6 +9,7 @@ protected:
   Node* start;
   Node* end;
   bool paramsUptoDate;
+public:
   double length;
   double cylVolume;
   double cylSurface;
@@ -19,7 +20,6 @@ protected:
   double calc_frstmVolume();
   double calc_frstmSurface();
   void updateParams();
-public:
   Compartment();
 
   inline double getlength(){
