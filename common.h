@@ -13,7 +13,14 @@
 #include <QVector>
 #include <QFileInfo>
 
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+
 # define PI 3.14159265358979323846  /* pi */
+
+//Argument Parameters to the executable can be defined here
+
 
 //Inline this function to avoid multiple definitions
 inline double absdiff(double a, double b) {
