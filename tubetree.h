@@ -16,6 +16,9 @@ private:
     QString vtk_minor_version = "0";
     void writeParams(QJsonObject &json);
 
+    int num_bifs;
+    int num_terminals;
+
     double avg_segvolcyl;
     double min_segvolcyl;
     double max_segvolcyl;
@@ -48,26 +51,35 @@ private:
     double min_compsurffrstm;
     double max_compsurffrstm;
 
+    double avg_segpathlen;
+    double min_segpathlen;
+    double max_segpathlen;
+
+    double avg_segeuclen;
+    double min_segeuclen;
+    double max_segeuclen;
+
+    double avg_complen;
+    double min_complen;
+    double max_complen;
+
     double total_cylvol;
     double total_frstmvol;
     double total_cylsurf;
     double total_frstmsurf;
+    double total_len;
 
     bool globalstatsdone;
-    enum ParamsFormat {
-            Json, Binary
-        };
 public:
     int vol_idx,vol_idy,vol_idz;
-    ParamsFormat Params;
     QString filebasename;
+    ParamsFormat Params;
     //Use qDeleteAll for the following
     QMap<int,Node*> NodeList; //for checking and understanding
     QVector<Compartment*> CompartmentList;
     QVector<Segment*> Segments;
     QVector<Segment*> RootSegList;
     QVector<Path> Paths;
-    int num_trees;
 
     TubeTree();
     TubeTree(QString swcfile);
@@ -83,6 +95,8 @@ public:
     void getSegStats();
     void getCompStats();
     bool writeJson(QString filename);
+    bool writeDat(QString filename);
+    bool write(QString filename);
 };
 
 #endif // TUBETREE_H

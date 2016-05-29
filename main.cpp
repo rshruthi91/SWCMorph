@@ -2,41 +2,154 @@
 #include "tubetree.h"
 
 //#define VOL_SERIES
+#define DEBUGPGM
+#define MAX_ARGS
+
+ParamsFormat writeParams(ParamsFormat::NoParams);
+ConvertFormat convertfile(ConvertFormat::NoConvert);
+
+bool parse_arg(const std::string opt);
 
 int main(int argc, char *argv[])
 {
+    std::string infilestr;
+    std::string outfilestr;
+    bool input_found = false;
+    bool output_found = false;
+    bool write_vtk = false;
+    bool write_params = false;
+    bool vol_series = false;
+    bool allow_nfurc = false;
+    bool type_fix = false;
     if(argc<3){
         qDebug()<< ">>> eXtensible Statistical Engine for Analysis of Tubular Structures <<<" << endl;
         qDebug()<< ">>>                     Shruthi Raghavan                             <<<" << endl;
         qDebug()<< "Usage:" << endl;
         qDebug()<< "To be Done";
         qDebug()<< ">>>                                                                  <<<" << endl;
+        return EXIT_SUCCESS;
+    }
+    else{
+        std::string switch_name;
+        int i=0;
+        for(i=1;i<argc;i++){
+            switch_name = argv[i];
+            if((switch_name == "-i") || (switch_name == "-I")){
+                i++;
+                infilestr = argv[i];
+                input_found = true;
+            } else if((switch_name == "-c") || (switch_name == "-C")){
+                i++;
+                std::string convformat = argv[i];
+                if(convformat == "vtk") write_vtk = true;
+                else{
+                    qDebug() << "vtk is the only supported format for conversion now.";
+                    return EXIT_FAILURE;
+                }
+            } else if((switch_name == "-p") || (switch_name == "-P")){
+                i++;
+                std::string inParamsFormat = argv[i];
+                if(inParamsFormat == "json"){
+                    write_params = true;
+                    writeParams = ParamsFormat::Json;
+                }
+                else if(inParamsFormat == "dat"){
+                    write_params = true;
+                    writeParams = ParamsFormat::Binary;
+                }
+                else {
+                    qDebug() << "Unsupported Params Format. Please use json or binary options only";
+                    return EXIT_FAILURE;
+                }
+            } else if((switch_name == "-o")||(switch_name == "-O")){
+                i++;
+                outfilestr = argv[i];
+                output_found = true;
+            } else if(switch_name == "-vol_series"){
+                vol_series = true;
+            } else if(switch_name == "-allow_nfurc"){
+                allow_nfurc = true;
+            } else if(switch_name == "-type_fix"){
+                type_fix = true;
+            } else {
+                std::cout << "Unrecognized argument: " << switch_name;
+                return EXIT_FAILURE;
+            }
+        }
     }
 
-    std::string str;
-    qDebug() << "Enter the name of swc file with path: " << endl;
-    std::getline(std::cin, str);
-    QString filename(str.c_str());
+    if(!input_found) {
+        qDebug() << "No input file specified. Please supply an input using [-i <Path-to-file>]" <<endl;
+        return EXIT_FAILURE;
+    }
+    if(!output_found) {
+        qDebug() << "No output path specified. All output files will be saved to the input file's location." << endl;
+        qDebug() << "MAY CAUSE OVERWRITING OF EXISTING FILES! BE CAREFUL!" << endl;
+    }
+
+    QString filename(infilestr.c_str());
     QFileInfo fi(filename);
+    if(!fi.exists()){
+        qDebug() << "File " << filename << " does not exist" << endl;
+        return EXIT_FAILURE;
+    }
 
+    /*This will read the file and Compute all the parameters*/
+    //This will probably have to change. This is intended as a data structure. the use should be the programmer's choice.
     TubeTree tubetree(filename);
+
+#ifdef DEBUGPGM
     qDebug() <<"Read the swc file into nodes";
+#endif
 
-    QString outputvtkfile = fi.absolutePath()+"/"+fi.baseName()+".vtk";
-    tubetree.filebasename = fi.baseName();
-    if(tubetree.writeVtkPoly(outputvtkfile)) {
-        qDebug() << "Wrote VTK file";
-    }else return EXIT_FAILURE;
+    if(write_vtk){
+        QString outputvtkfile = fi.absolutePath()+"/"+fi.baseName()+".vtk";
+        tubetree.filebasename = fi.baseName();
+        if(tubetree.writeVtkPoly(outputvtkfile)) {
+            //qDebug() << "Wrote VTK file";
+        }else {
+            qDebug() << "Could not write VTK file";
+            //return EXIT_FAILURE;
+        }
+    }
 
+    if(vol_series){
     QStringList sl = fi.baseName().split("_");
     int sl_size = sl.size();
     tubetree.vol_idz = sl[sl_size-1].toInt();
     tubetree.vol_idy = sl[sl_size-2].toInt();
     tubetree.vol_idx = sl[sl_size-3].toInt();
-    QString outputparamsfile = fi.absolutePath()+"/"+fi.baseName()+".json";
-    if(tubetree.writeJson(outputparamsfile)) {
-        qDebug() << "Wrote Params file";
-    }else return EXIT_FAILURE;
+    }
+
+    if(write_params){
+        QString outputparamsfile = fi.absolutePath()+"/"+fi.baseName()+".json";
+        if(writeParams==ParamsFormat::Json){
+            if(tubetree.writeJson(outputparamsfile)) {
+                qDebug() << "Wrote Params file";
+            }else return EXIT_FAILURE;
+        }
+        else if(writeParams==ParamsFormat::Binary){
+            if(tubetree.writeDat(outputparamsfile)){
+                qDebug() << "Wrote Params File";
+            } else return EXIT_FAILURE;
+        }
+    }
 
     return EXIT_SUCCESS;
+}
+
+bool parse_arg(const std::string opt){
+    if(opt == "vtk"){
+        convertfile = ConvertFormat::VTK;
+        return true;
+    }
+    else if(opt == "json"){
+        writeParams = ParamsFormat::Json;
+        return true;
+    }
+    else if(opt == "dat"){
+        writeParams = ParamsFormat::Binary;
+        return true;
+    }
+    else return false;
 }

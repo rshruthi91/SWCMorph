@@ -20,7 +20,12 @@
 # define PI 3.14159265358979323846  /* pi */
 
 //Argument Parameters to the executable can be defined here
-
+enum ParamsFormat {
+        Json, Binary,NoParams
+    };
+enum ConvertFormat {
+        VTK,NoConvert
+    };
 
 //Inline this function to avoid multiple definitions
 inline double absdiff(double a, double b) {

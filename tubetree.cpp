@@ -3,7 +3,6 @@
 
 TubeTree::TubeTree()
 {
-    this->num_trees = 0;
     this->infilepath ="";
     qDeleteAll(this->NodeList);
     this->NodeList.clear();
@@ -19,7 +18,6 @@ TubeTree::TubeTree()
 TubeTree::TubeTree(QString swcfile)
 {
     this->populated = false;
-    this->num_trees = 0;
     this->infilepath = swcfile;
     this->vol_idx = 100;
     this->vol_idy = 100;
@@ -33,10 +31,22 @@ TubeTree::TubeTree(QString swcfile)
     this->Segments.clear();
     qDeleteAll(this->RootSegList);
     this->RootSegList.clear();
-    this->Params =this->Json;
     this->filebasename = "";
 
     globalstatsdone=false;
+    this->Params = NoParams;
+
+    this->avg_complen = -1;
+    this->min_complen = DBL_MAX;
+    this->max_complen = -1;
+
+    this->avg_segpathlen = -1;
+    this->min_segpathlen = DBL_MAX;
+    this->max_segpathlen = -1;
+
+    this->avg_segeuclen = -1;
+    this->min_segeuclen = DBL_MAX;
+    this->max_segeuclen = -1;
 
     this->avg_segvolcyl = -1;
     this->min_segvolcyl = DBL_MAX;
@@ -74,6 +84,9 @@ TubeTree::TubeTree(QString swcfile)
     this->total_frstmvol = -1;
     this->total_cylsurf = -1;
     this->total_frstmsurf = -1;
+
+    this->num_bifs=0;
+    this->num_terminals=0;
 
     if(!SWCReadNodes()){
         NodeList.clear();
@@ -117,7 +130,6 @@ TubeTree::TubeTree(QString swcfile)
              swcnode->setRadius(swcnodeparams[5].toDouble());
              swcnode->setPID(swcnodeparams[6].toInt());
              if(swcnode->getPID() == -1) {
-                 num_trees++;
                  swcnode->setRoot(true);
              }
          } else continue;
@@ -147,11 +159,14 @@ TubeTree::TubeTree(QString swcfile)
          }
          if(num_bifs == 0) {
              swcnode->setTerminal(true);
+             this->num_terminals++;
          }
          else {
              CompartmentList.last()->getStart()->setNBifs(num_bifs);
-             if(num_bifs > 1)
+             if(num_bifs > 1) {
                  CompartmentList.last()->getStart()->setBranch(true);
+                 this->num_bifs++;
+             }
          }
          num_bifs = 0;
      }
@@ -301,6 +316,8 @@ TubeTree::TubeTree(QString swcfile)
      double total_cylsurf=0;
      double total_frstmvol=0;
      double total_frstmsurf=0;
+     double total_pathlen=0;
+     double total_euclen=0;
 
      long NSegments = (this->Segments.size());
 
@@ -310,13 +327,26 @@ TubeTree::TubeTree(QString swcfile)
          double svolfrstm = s->frstmVolume;
          double ssurfcyl = s->cylSurface;
          double ssurffrstm = s->frstmSurface;
+         double spathlen = s->pathlength;
+         double seuclen = s->euc_length;
 
          total_cylvol +=svolcyl;
          total_frstmvol +=svolfrstm;
          total_cylsurf += ssurfcyl;
          total_frstmsurf += ssurffrstm;
+         total_pathlen += spathlen;
+         total_euclen += seuclen;
 
-         if(svolcyl < this->min_segvolcyl && svolcyl> 0)
+         if(spathlen < this->min_segpathlen && spathlen>0)
+             this->min_segpathlen = spathlen;
+         if(spathlen > max_segpathlen)
+             this->max_segpathlen = spathlen;
+         if(seuclen < this->min_segeuclen && seuclen>0)
+             this->min_segeuclen = seuclen;
+         if(seuclen > max_segeuclen)
+             this->max_segeuclen = seuclen;
+
+         if(svolcyl < this->min_segvolcyl && svolcyl>0)
              this->min_segvolcyl = svolcyl;
          if(svolcyl > max_segvolcyl)
              this->max_segvolcyl = svolcyl;
@@ -340,6 +370,7 @@ TubeTree::TubeTree(QString swcfile)
          this->total_cylsurf = total_cylsurf;
          this->total_frstmsurf = total_frstmsurf;
          this->total_frstmvol = total_frstmvol;
+         this->total_len = total_pathlen;
          this->globalstatsdone = true;
      }
 
@@ -347,6 +378,8 @@ TubeTree::TubeTree(QString swcfile)
      this->avg_segvolfrstm=total_frstmvol/NSegments;
      this->avg_segsurfcyl=total_cylsurf/NSegments;
      this->avg_segsurffrstm=total_frstmsurf/NSegments;
+     this->avg_segpathlen = total_pathlen/NSegments;
+     this->avg_segeuclen = total_euclen/NSegments;
  }
 
  void TubeTree::getCompStats(){
@@ -354,6 +387,7 @@ TubeTree::TubeTree(QString swcfile)
      double total_cylsurf=0;
      double total_frstmvol=0;
      double total_frstmsurf=0;
+     double total_length=0;
 
      long NCompartments = (this->CompartmentList.size());
 
@@ -363,11 +397,18 @@ TubeTree::TubeTree(QString swcfile)
          double svolfrstm = s->frstmVolume;
          double ssurfcyl = s->cylSurface;
          double ssurffrstm = s->frstmSurface;
+         double slen = s->length;
 
          total_cylvol +=svolcyl;
          total_frstmvol +=svolfrstm;
          total_cylsurf += ssurfcyl;
          total_frstmsurf += ssurffrstm;
+         total_length += slen;
+
+         if(slen < this->min_complen && slen>0)
+             this->min_complen = slen;
+         if(slen > this->max_complen)
+             this->max_complen = slen;
 
          if(svolcyl < this->min_compvolcyl && svolcyl>0)
              this->min_compvolcyl = svolcyl;
@@ -393,6 +434,7 @@ TubeTree::TubeTree(QString swcfile)
          this->total_cylsurf = total_cylsurf;
          this->total_frstmsurf = total_frstmsurf;
          this->total_frstmvol = total_frstmvol;
+         this->total_len = total_length;
          this->globalstatsdone = true;
      }
 
@@ -400,15 +442,26 @@ TubeTree::TubeTree(QString swcfile)
      this->avg_compvolfrstm=total_frstmvol/NCompartments;
      this->avg_compsurfcyl=total_cylsurf/NCompartments;
      this->avg_compsurffrstm=total_frstmsurf/NCompartments;
+     this->avg_complen = total_length/NCompartments;
  }
 
- bool TubeTree::writeJson(QString filename)
+ bool TubeTree::writeJson(QString filename){
+     this->Params = Json;
+     return write(filename);
+ }
+
+ bool TubeTree::writeDat(QString filename){
+     this->Params = Binary;
+     return write(filename);
+ }
+
+ bool TubeTree::write(QString filename)
  {
      getCompStats();
      getSegStats();
-     this->Params = (filename.split('.').last() == "json")?
-                           this->Json:
-                           this->Binary;
+//     this->Params = (filename.split('.').last() == "json")?
+//                           ParamsFormat::Json:
+//                           ParamsFormat::Binary;
 
      /*QFile saveFile(this->Params == this->Json
              ? QStringLiteral("TubeTree.json")
@@ -421,44 +474,56 @@ TubeTree::TubeTree(QString swcfile)
              return false;
          }
 
-     QJsonObject json;
+     QJsonObject TubeDesc;
 
      QJsonObject SegmentObject;
-     QJsonArray cylVolSeg,cylsurfSeg,frstmvolSeg,frstmsurfSeg;
+     QJsonArray cylVolSeg,cylsurfSeg,frstmvolSeg,frstmsurfSeg,eucLen,pathLen;
      cylVolSeg    = {this->min_segvolcyl   ,this->max_segvolcyl   ,this->avg_segvolcyl};
      cylsurfSeg   = {this->min_segsurfcyl  ,this->max_segsurfcyl  ,this->avg_segsurfcyl};
      frstmvolSeg  = {this->min_segvolfrstm ,this->max_segvolfrstm ,this->avg_segvolfrstm};
      frstmsurfSeg = {this->min_segsurffrstm,this->max_segsurffrstm,this->avg_segsurffrstm};
+     eucLen = {this->min_segeuclen, this->max_segeuclen, this->avg_segeuclen};
+     pathLen = {this->min_segpathlen, this->max_segpathlen, this->avg_segpathlen};
      SegmentObject["cylVol"]    = cylVolSeg;
      SegmentObject["cylSurf"]   = cylsurfSeg;
      SegmentObject["frstmVol"]  = frstmvolSeg;
      SegmentObject["frstmSurf"] = frstmsurfSeg;
+     SegmentObject["eucLen"] = eucLen;
+     SegmentObject["pathLen"] = pathLen;
 
      QJsonObject CompartmentObject;
-     QJsonArray cylVolComp,cylsurfComp,frstmvolComp,frstmsurfComp;
+     QJsonArray cylVolComp,cylsurfComp,frstmvolComp,frstmsurfComp,CompLen;
      cylVolComp    = {this->min_compvolcyl   ,this->max_compvolcyl   ,this->avg_compvolcyl};
      cylsurfComp   = {this->min_compsurfcyl  ,this->max_compsurfcyl  ,this->avg_compsurfcyl};
      frstmvolComp  = {this->min_compvolfrstm ,this->max_compvolfrstm ,this->avg_compvolfrstm};
      frstmsurfComp = {this->min_compsurffrstm,this->max_compsurffrstm,this->avg_compsurffrstm};
+     CompLen = {this->min_complen, this->max_complen, this->avg_complen};
      CompartmentObject["cylVol"]    = cylVolComp;
      CompartmentObject["cylSurf"]   = cylsurfComp;
      CompartmentObject["frstmVol"]  = frstmvolComp;
      CompartmentObject["frstmSurf"] = frstmsurfComp;
+     CompartmentObject["length"] = CompLen;
 
-     json["Segments"]     = SegmentObject;
-     json["Compartments"] = CompartmentObject;
+     TubeDesc["Segments"]     = SegmentObject;
+     TubeDesc["Compartments"] = CompartmentObject;
 
-     json["total_cylvol"]    = this->total_cylvol;
-     json["total_cylsurf"]   = this->total_cylsurf;
-     json["total_frstmvol"]  = this->total_frstmvol;
-     json["total_frstmsurf"] = this->total_frstmsurf;
+     TubeDesc["total_cylvol"]    = this->total_cylvol;
+     TubeDesc["total_cylsurf"]   = this->total_cylsurf;
+     TubeDesc["total_frstmvol"]  = this->total_frstmvol;
+     TubeDesc["total_frstmsurf"] = this->total_frstmsurf;
+     TubeDesc["total_length"] = this->total_len;
 
-     json["vol_idz"] = this->vol_idz;
-     json["vol_idy"] = this->vol_idy;
-     json["vol_idx"] = this->vol_idx;
+     TubeDesc["NBifurcations"] = this->num_bifs;
+     TubeDesc["NSegments"] = Segments.size();
+     TubeDesc["NCompartments"] = CompartmentList.size();
+     TubeDesc["NTerminals"] = this->num_terminals;
 
-     QJsonDocument saveDoc(json);
-     saveFile.write(this->Params == this->Json
+     TubeDesc["vol_idz"] = this->vol_idz;
+     TubeDesc["vol_idy"] = this->vol_idy;
+     TubeDesc["vol_idx"] = this->vol_idx;
+
+     QJsonDocument saveDoc(TubeDesc);
+     saveFile.write(this->Params == ParamsFormat::Json
          ? saveDoc.toJson()
          : saveDoc.toBinaryData());
 
