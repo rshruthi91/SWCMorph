@@ -1,19 +1,16 @@
 #include "common.h"
 #include "tubetree.h"
 
-//#define VOL_SERIES
 #define DEBUGPGM
 #define MAX_ARGS
 
 ParamsFormat writeParams(ParamsFormat::NoParams);
 ConvertFormat convertfile(ConvertFormat::NoConvert);
 
-bool parse_arg(const std::string opt);
-
 int main(int argc, char *argv[])
 {
-    std::string infilestr;
-    std::string outfilestr;
+    std::string infilestr = "";
+    QString outfilestr = "";
     bool input_found = false;
     bool output_found = false;
     bool write_vtk = false;
@@ -37,6 +34,7 @@ int main(int argc, char *argv[])
             if((switch_name == "-i") || (switch_name == "-I")){
                 i++;
                 infilestr = argv[i];
+                //infilestr.erase(std::remove(infilestr.begin(),infilestr.end(),'\"'),infilestr.end());
                 input_found = true;
             } else if((switch_name == "-c") || (switch_name == "-C")){
                 i++;
@@ -63,7 +61,12 @@ int main(int argc, char *argv[])
                 }
             } else if((switch_name == "-o")||(switch_name == "-O")){
                 i++;
-                outfilestr = argv[i];
+                std::string outfile = argv[i];
+                outfilestr = outfile.c_str();
+                //outfile.erase(std::remove(outfile.begin(),outfile.end(),'\"'),outfile.end());
+                //if(outfilestr.startsWith("\"")) outfilestr.remove(0,1);
+                //if(outfilestr.endsWith("\"")) outfilestr.remove(outfilestr.size()-1,1);
+                //if(outfilestr.endsWith("\\")) outfilestr.remove(outfilestr.size()-1,1);
                 output_found = true;
             } else if(switch_name == "-vol_series"){
                 vol_series = true;
@@ -88,6 +91,8 @@ int main(int argc, char *argv[])
     }
 
     QString filename(infilestr.c_str());
+    //if(filename.startsWith("\"")) filename.remove(0,1);
+    //if(filename.endsWith("\"")) filename.remove(filename.size()-1,1);
     QFileInfo fi(filename);
     if(!fi.exists()){
         qDebug() << "File " << filename << " does not exist" << endl;
@@ -103,7 +108,12 @@ int main(int argc, char *argv[])
 #endif
 
     if(write_vtk){
-        QString outputvtkfile = fi.absolutePath()+"/"+fi.baseName()+".vtk";
+        QString outputvtkfile;
+        if(output_found){
+            outputvtkfile = outfilestr+"/"+fi.baseName()+".vtk";
+        }else{
+            outputvtkfile = fi.absolutePath()+"/"+fi.baseName()+".vtk";
+        }
         tubetree.filebasename = fi.baseName();
         if(tubetree.writeVtkPoly(outputvtkfile)) {
             //qDebug() << "Wrote VTK file";
@@ -122,7 +132,12 @@ int main(int argc, char *argv[])
     }
 
     if(write_params){
-        QString outputparamsfile = fi.absolutePath()+"/"+fi.baseName()+".json";
+        QString outputparamsfile;
+        if(output_found){
+            outputparamsfile = outfilestr+"/"+fi.baseName()+".json";
+        }else{
+            outputparamsfile = fi.absolutePath()+"/"+fi.baseName()+".json";
+        }
         if(writeParams==ParamsFormat::Json){
             if(tubetree.writeJson(outputparamsfile)) {
                 qDebug() << "Wrote Params file";
@@ -136,20 +151,4 @@ int main(int argc, char *argv[])
     }
 
     return EXIT_SUCCESS;
-}
-
-bool parse_arg(const std::string opt){
-    if(opt == "vtk"){
-        convertfile = ConvertFormat::VTK;
-        return true;
-    }
-    else if(opt == "json"){
-        writeParams = ParamsFormat::Json;
-        return true;
-    }
-    else if(opt == "dat"){
-        writeParams = ParamsFormat::Binary;
-        return true;
-    }
-    else return false;
 }
