@@ -9,9 +9,11 @@ ParamsFormat writeParams;
 int main(int argc, char *argv[])
 {
     std::string infilestr = "";
-    QString outfilestr = "";
+    QString coutfilestr = "";
+    QString poutfilestr = "";
     bool input_found = false;
-    bool output_found = false;
+    bool coutput_found = false;
+    bool poutput_found = false;
     bool write_vtk = false;
     bool write_params = false;
     bool vol_series = false;
@@ -61,12 +63,32 @@ int main(int argc, char *argv[])
             } else if((switch_name == "-o")||(switch_name == "-O")){
                 i++;
                 std::string outfile = argv[i];
-                outfilestr = outfile.c_str();
+                coutfilestr = outfile.c_str();
+                poutfilestr = outfile.c_str();
                 //outfile.erase(std::remove(outfile.begin(),outfile.end(),'\"'),outfile.end());
                 //if(outfilestr.startsWith("\"")) outfilestr.remove(0,1);
                 //if(outfilestr.endsWith("\"")) outfilestr.remove(outfilestr.size()-1,1);
                 //if(outfilestr.endsWith("\\")) outfilestr.remove(outfilestr.size()-1,1);
-                output_found = true;
+                coutput_found = true;
+                poutput_found = true;
+            } else if((switch_name == "-co")||(switch_name == "-CO")){
+                i++;
+                std::string outfile = argv[i];
+                coutfilestr = outfile.c_str();
+                //outfile.erase(std::remove(outfile.begin(),outfile.end(),'\"'),outfile.end());
+                //if(outfilestr.startsWith("\"")) outfilestr.remove(0,1);
+                //if(outfilestr.endsWith("\"")) outfilestr.remove(outfilestr.size()-1,1);
+                //if(outfilestr.endsWith("\\")) outfilestr.remove(outfilestr.size()-1,1);
+                coutput_found = true;
+            } else if((switch_name == "-po")||(switch_name == "-PO")){
+                i++;
+                std::string outfile = argv[i];
+                poutfilestr = outfile.c_str();
+                //outfile.erase(std::remove(outfile.begin(),outfile.end(),'\"'),outfile.end());
+                //if(outfilestr.startsWith("\"")) outfilestr.remove(0,1);
+                //if(outfilestr.endsWith("\"")) outfilestr.remove(outfilestr.size()-1,1);
+                //if(outfilestr.endsWith("\\")) outfilestr.remove(outfilestr.size()-1,1);
+                poutput_found = true;
             } else if(switch_name == "-vol_series"){
                 vol_series = true;
             } else if(switch_name == "-allow_nfurc"){
@@ -84,7 +106,7 @@ int main(int argc, char *argv[])
         qDebug() << "No input file specified. Please supply an input using [-i <Path-to-file>]" <<endl;
         return EXIT_FAILURE;
     }
-    if(!output_found) {
+    if(!coutput_found && !poutput_found) {
         qDebug() << "No output path specified. All output files will be saved to the input file's location." << endl;
         qDebug() << "MAY CAUSE OVERWRITING OF EXISTING FILES! BE CAREFUL!" << endl;
     }
@@ -108,8 +130,8 @@ int main(int argc, char *argv[])
 
     if(write_vtk){
         QString outputvtkfile;
-        if(output_found){
-            outputvtkfile = outfilestr+"/"+fi.baseName()+".vtk";
+        if(coutput_found){
+            outputvtkfile = coutfilestr+"/"+fi.baseName()+".vtk";
         }else{
             outputvtkfile = fi.absolutePath()+"/"+fi.baseName()+".vtk";
         }
@@ -132,8 +154,8 @@ int main(int argc, char *argv[])
 
     if(write_params){
         QString outputparamsfile;
-        if(output_found){
-            outputparamsfile = outfilestr+"/"+fi.baseName()+".json";
+        if(poutput_found){
+            outputparamsfile = poutfilestr+"/"+fi.baseName()+".json";
         }else{
             outputparamsfile = fi.absolutePath()+"/"+fi.baseName()+".json";
         }
