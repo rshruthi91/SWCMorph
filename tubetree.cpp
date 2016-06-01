@@ -38,54 +38,54 @@ TubeTree::TubeTree(QString swcfile)
     globalstatsdone=false;
     this->Params = NoParams;
 
-    this->avg_complen = -1;
+    this->avg_complen = 0;
     this->min_complen = DBL_MAX;
-    this->max_complen = -1;
+    this->max_complen = 0;
 
-    this->avg_segpathlen = -1;
+    this->avg_segpathlen = 0;
     this->min_segpathlen = DBL_MAX;
-    this->max_segpathlen = -1;
+    this->max_segpathlen = 0;
 
-    this->avg_segeuclen = -1;
+    this->avg_segeuclen = 0;
     this->min_segeuclen = DBL_MAX;
-    this->max_segeuclen = -1;
+    this->max_segeuclen = 0;
 
-    this->avg_segvolcyl = -1;
+    this->avg_segvolcyl = 0;
     this->min_segvolcyl = DBL_MAX;
-    this->max_segvolcyl = -1;
+    this->max_segvolcyl = 0;
 
-    this->avg_compvolcyl = -1;
+    this->avg_compvolcyl = 0;
     this->min_compvolcyl = DBL_MAX;
-    this->max_compvolcyl = -1;
+    this->max_compvolcyl = 0;
 
-    this->avg_segvolfrstm = -1;
+    this->avg_segvolfrstm = 0;
     this->min_segvolfrstm = DBL_MAX;
-    this->max_segvolfrstm = -1;
+    this->max_segvolfrstm = 0;
 
-    this->avg_compvolfrstm = -1;
+    this->avg_compvolfrstm = 0;
     this->min_compvolfrstm = DBL_MAX;
-    this->max_compvolfrstm = -1;
+    this->max_compvolfrstm = 0;
 
-    this->avg_segsurfcyl = -1;
+    this->avg_segsurfcyl = 0;
     this->min_segsurfcyl = DBL_MAX;
-    this->max_segsurfcyl = -1;
+    this->max_segsurfcyl = 0;
 
-    this->avg_compsurfcyl = -1;
+    this->avg_compsurfcyl = 0;
     this->min_compsurfcyl = DBL_MAX;
-    this->max_compsurfcyl = -1;
+    this->max_compsurfcyl = 0;
 
-    this->avg_segsurffrstm = -1;
+    this->avg_segsurffrstm = 0;
     this->min_segsurffrstm = DBL_MAX;
-    this->max_segsurffrstm = -1;
+    this->max_segsurffrstm = 0;
 
-    this->avg_compsurffrstm = -1;
+    this->avg_compsurffrstm = 0;
     this->min_compsurffrstm = DBL_MAX;
-    this->max_compsurffrstm = -1;
+    this->max_compsurffrstm = 0;
 
-    this->total_cylvol = -1;
-    this->total_frstmvol = -1;
-    this->total_cylsurf = -1;
-    this->total_frstmsurf = -1;
+    this->total_cylvol = 0;
+    this->total_frstmvol = 0;
+    this->total_cylsurf = 0;
+    this->total_frstmsurf = 0;
 
     this->num_bifs=0;
     this->num_terminals=0;
@@ -324,13 +324,18 @@ TubeTree::TubeTree(QString swcfile)
      long NSegments = (this->Segments.size());
 
      foreach(Segment *s,this->Segments){
+         //Discard the dummy compartments
+         if(s->CompartmentList.first()->getEnd()->getType() == 1) {
+             qDebug() << "Compartment with end node " << s->CompartmentList.first()->getEnd()->getID() << " and start node " << s->CompartmentList.first()->getStart()->getID() << " was discarded" << endl;
+             continue;
+           }
          s->updateParams();
-         double svolcyl = s->cylVolume;
-         double svolfrstm = s->frstmVolume;
-         double ssurfcyl = s->cylSurface;
-         double ssurffrstm = s->frstmSurface;
-         double spathlen = s->pathlength;
-         double seuclen = s->euc_length;
+         double svolcyl = s->getcylVolume();
+         double svolfrstm = s->getfrstmVolume();
+         double ssurfcyl = s->getcylSurface();
+         double ssurffrstm = s->getfrstmSurface();
+         double spathlen = s->getpathlength();
+         double seuclen = s->geteuclength();
 
          total_cylvol +=svolcyl;
          total_frstmvol +=svolfrstm;
@@ -362,7 +367,7 @@ TubeTree::TubeTree(QString swcfile)
          if(ssurfcyl > max_segsurfcyl)
              this->max_segsurfcyl = ssurfcyl;
          if(ssurffrstm < this->min_segsurffrstm && ssurffrstm>0)
-             this->min_segvolfrstm = ssurffrstm;
+             this->min_segsurffrstm = ssurffrstm;
          if(ssurffrstm > this->max_segsurffrstm)
              this->max_segsurffrstm = ssurffrstm;
      }
@@ -426,7 +431,7 @@ TubeTree::TubeTree(QString swcfile)
          if(ssurfcyl > max_compsurfcyl)
              this->max_compsurfcyl = ssurfcyl;
          if(ssurffrstm < this->min_compsurffrstm && ssurffrstm>0)
-             this->min_compvolfrstm = ssurffrstm;
+             this->min_compsurffrstm = ssurffrstm;
          if(ssurffrstm > this->max_compsurffrstm)
              this->max_compsurffrstm = ssurffrstm;
      }
@@ -501,8 +506,8 @@ TubeTree::TubeTree(QString swcfile)
 
      SegmentObject["CylindricalVolume"]    = SegmentCylindricalVolume;
      SegmentObject["CylindricalSurface"]   = SegmentCylindricalSurface;
-     SegmentObject["FrustumVolume"]        = SegmentFrustumVolume;
-     SegmentObject["FrustumSurface"]       = SegmentFrustumSurface;
+     SegmentObject["FrustoconicalVolume"]        = SegmentFrustumVolume;
+     SegmentObject["FrustoconicalSurface"]       = SegmentFrustumSurface;
      SegmentObject["EuclideanLength"]      = SegmentEuclideanLength;
      SegmentObject["PathLength"]           = SegmenPathLength;
 
@@ -534,8 +539,8 @@ TubeTree::TubeTree(QString swcfile)
 
      CompartmentObject["CylindricalVolume"]    = CompartmentCylindricalVolume;
      CompartmentObject["CylindricalSurface"]   = CompartmentCylindricalSurface;
-     CompartmentObject["FrutsumVolume"]  = CompartmentFrustumVolume;
-     CompartmentObject["FrustumSurface"] = CompartmentFrustumSurface;
+     CompartmentObject["FrustoconicalVolume"]  = CompartmentFrustumVolume;
+     CompartmentObject["FrustoconicalSurface"] = CompartmentFrustumSurface;
      CompartmentObject["Length"]    = CompartmentLength;
 
      //Change this. Not all the volumes input have volume IDs.
@@ -547,8 +552,8 @@ TubeTree::TubeTree(QString swcfile)
      QJsonObject SampleTotal;
      SampleTotal["CylindricalVolume"]    = this->total_cylvol;
      SampleTotal["CylindricalSurface"]   = this->total_cylsurf;
-     SampleTotal["FrutsumVolume"]  = this->total_frstmvol;
-     SampleTotal["FrustumSurface"] = this->total_frstmsurf;
+     SampleTotal["FrustoconicalVolume"]  = this->total_frstmvol;
+     SampleTotal["FrustoconicalSurface"] = this->total_frstmsurf;
      SampleTotal["Length"] = this->total_len;
 
      SampleTotal["NumBifurcations"] = this->num_bifs;
