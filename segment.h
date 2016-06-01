@@ -10,6 +10,7 @@ private:
     bool root;
     QVector<Segment*> children;
     QVector<Segment*> parents;
+    bool paramsUptoDate;
 //    double pathlength;
 //    double euc_length;
 //    double cylVolume;
@@ -70,6 +71,36 @@ public:
     }
     inline void addParent(Segment* par) {
         this->parents.append(par);
+    }
+
+    inline double getcylVolume(){
+      if(!paramsUptoDate) this->updateParams();
+      return this->cylVolume;
+    }
+
+    inline double getcylSurface(){
+      if(!paramsUptoDate) this->updateParams();
+      return this->cylSurface;
+    }
+
+    inline double getfrstmVolume(){
+      if(!paramsUptoDate) this->updateParams();
+      return this->frstmVolume;
+    }
+
+    inline double getfrstmSurface(){
+      if(!paramsUptoDate) this->updateParams();
+      return this->frstmSurface;
+    }
+
+    inline double getpathlength(){
+      if(!paramsUptoDate) this->updateParams();
+      return this->pathlength;
+    }
+
+    inline double geteuclength(){
+      if(!paramsUptoDate) this->updateParams();
+      return this->euc_length;
     }
 
     void updateParams();
