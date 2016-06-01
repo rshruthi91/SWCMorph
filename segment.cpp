@@ -14,6 +14,7 @@ Segment::Segment()
     this->cylSurface=0.0;
     this->frstmVolume=0.0;
     this->frstmSurface=0.0;
+    this->paramsUptoDate = false;
 }
 
 void Segment::updateParams() {
@@ -27,6 +28,8 @@ void Segment::updateParams() {
         this->frstmVolume += c->getfrstmVolume();
         this->pathlength += c->getlength();
     }
+
     this->euc_length = this->CompartmentList.first()->getStart()->eucldist(
                 this->CompartmentList.last()->getEnd());
+    this->paramsUptoDate = true;
 }
