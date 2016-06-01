@@ -459,68 +459,106 @@ TubeTree::TubeTree(QString swcfile)
  {
      getCompStats();
      getSegStats();
-//     this->Params = (filename.split('.').last() == "json")?
-//                           ParamsFormat::Json:
-//                           ParamsFormat::Binary;
-
-     /*QFile saveFile(this->Params == this->Json
-             ? QStringLiteral("TubeTree.json")
-             : QStringLiteral("TubeTree.dat"));*/
 
      QFile saveFile(filename);
-
      if (!saveFile.open(QIODevice::WriteOnly)) {
              qWarning("Couldn't open save file.");
              return false;
-         }
-
-     QJsonObject TubeDesc;
+     }
 
      QJsonObject SegmentObject;
-     QJsonArray cylVolSeg,cylsurfSeg,frstmvolSeg,frstmsurfSeg,eucLen,pathLen;
-     cylVolSeg    = {this->min_segvolcyl   ,this->max_segvolcyl   ,this->avg_segvolcyl};
-     cylsurfSeg   = {this->min_segsurfcyl  ,this->max_segsurfcyl  ,this->avg_segsurfcyl};
-     frstmvolSeg  = {this->min_segvolfrstm ,this->max_segvolfrstm ,this->avg_segvolfrstm};
-     frstmsurfSeg = {this->min_segsurffrstm,this->max_segsurffrstm,this->avg_segsurffrstm};
-     eucLen = {this->min_segeuclen, this->max_segeuclen, this->avg_segeuclen};
-     pathLen = {this->min_segpathlen, this->max_segpathlen, this->avg_segpathlen};
-     SegmentObject["cylVol"]    = cylVolSeg;
-     SegmentObject["cylSurf"]   = cylsurfSeg;
-     SegmentObject["frstmVol"]  = frstmvolSeg;
-     SegmentObject["frstmSurf"] = frstmsurfSeg;
-     SegmentObject["eucLen"] = eucLen;
-     SegmentObject["pathLen"] = pathLen;
+     QJsonObject SegmentCylindricalVolume;
+     QJsonObject SegmentCylindricalSurface;
+     QJsonObject SegmentFrustumVolume;
+     QJsonObject SegmentFrustumSurface;
+     QJsonObject SegmentEuclideanLength;
+     QJsonObject SegmenPathLength;
+
+     SegmentCylindricalVolume["Minimum"]    =   this->min_segvolcyl;
+     SegmentCylindricalSurface["Minimum"]   =   this->min_segsurfcyl;
+     SegmentFrustumVolume["Minimum"]        =   this->min_segvolfrstm;
+     SegmentFrustumSurface["Minimum"]       =   this->min_segsurffrstm;
+     SegmentEuclideanLength["Minimum"]      =   this->min_segeuclen;
+     SegmenPathLength["Minimum"]            =   this->min_segpathlen;
+
+
+     SegmentCylindricalVolume["Maximum"]    =   this->max_segvolcyl;
+     SegmentCylindricalSurface["Maximum"]   =   this->max_segsurfcyl;
+     SegmentFrustumVolume["Maximum"]        =   this->max_segvolfrstm;
+     SegmentFrustumSurface["Maximum"]       =   this->max_segsurffrstm;
+     SegmentEuclideanLength["Maximum"]      =   this->max_segeuclen;
+     SegmenPathLength["Maximum"]            =   this->max_segpathlen;
+
+
+     SegmentCylindricalVolume["Average"]    =   this->avg_segvolcyl;
+     SegmentCylindricalSurface["Average"]   =   this->avg_segsurfcyl;
+     SegmentFrustumVolume["Average"]        =   this->avg_segvolfrstm;
+     SegmentFrustumSurface["Average"]       =   this->avg_segsurffrstm;
+     SegmentEuclideanLength["Average"]      =   this->avg_segeuclen;
+     SegmenPathLength["Average"]            =   this->avg_segpathlen;
+
+     SegmentObject["CylindricalVolume"]    = SegmentCylindricalVolume;
+     SegmentObject["CylindricalSurface"]   = SegmentCylindricalSurface;
+     SegmentObject["FrustumVolume"]        = SegmentFrustumVolume;
+     SegmentObject["FrustumSurface"]       = SegmentFrustumSurface;
+     SegmentObject["EuclideanLength"]      = SegmentEuclideanLength;
+     SegmentObject["PathLength"]           = SegmenPathLength;
 
      QJsonObject CompartmentObject;
-     QJsonArray cylVolComp,cylsurfComp,frstmvolComp,frstmsurfComp,CompLen;
-     cylVolComp    = {this->min_compvolcyl   ,this->max_compvolcyl   ,this->avg_compvolcyl};
-     cylsurfComp   = {this->min_compsurfcyl  ,this->max_compsurfcyl  ,this->avg_compsurfcyl};
-     frstmvolComp  = {this->min_compvolfrstm ,this->max_compvolfrstm ,this->avg_compvolfrstm};
-     frstmsurfComp = {this->min_compsurffrstm,this->max_compsurffrstm,this->avg_compsurffrstm};
-     CompLen = {this->min_complen, this->max_complen, this->avg_complen};
-     CompartmentObject["cylVol"]    = cylVolComp;
-     CompartmentObject["cylSurf"]   = cylsurfComp;
-     CompartmentObject["frstmVol"]  = frstmvolComp;
-     CompartmentObject["frstmSurf"] = frstmsurfComp;
-     CompartmentObject["length"] = CompLen;
+     QJsonObject CompartmentCylindricalVolume;
+     QJsonObject CompartmentCylindricalSurface;
+     QJsonObject CompartmentFrustumVolume;
+     QJsonObject CompartmentFrustumSurface;
+     QJsonObject CompartmentLength;
 
-     TubeDesc["Segments"]     = SegmentObject;
+     CompartmentCylindricalVolume["Minimum"]    =   this->min_compvolcyl;
+     CompartmentCylindricalSurface["Minimum"]   =   this->min_compsurfcyl;
+     CompartmentFrustumVolume["Minimum"]        =   this->min_compvolfrstm;
+     CompartmentFrustumSurface["Minimum"]       =   this->min_compsurffrstm;
+     CompartmentLength["Minimum"]      =   this->min_complen;
+
+     CompartmentCylindricalVolume["Maximum"]    =   this->max_compvolcyl;
+     CompartmentCylindricalSurface["Maximum"]   =   this->max_compsurfcyl;
+     CompartmentFrustumVolume["Maximum"]        =   this->max_compvolfrstm;
+     CompartmentFrustumSurface["Maximum"]       =   this->max_compsurffrstm;
+     CompartmentLength["Maximum"]      =   this->max_complen;
+
+
+     CompartmentCylindricalVolume["Average"]    =   this->avg_compvolcyl;
+     CompartmentCylindricalSurface["Average"]   =   this->avg_compsurfcyl;
+     CompartmentFrustumVolume["Average"]        =   this->avg_compvolfrstm;
+     CompartmentFrustumSurface["Average"]       =   this->avg_compsurffrstm;
+     CompartmentLength["Average"]               =   this->avg_complen;
+
+     CompartmentObject["cylVol"]    = CompartmentCylindricalVolume;
+     CompartmentObject["cylSurf"]   = CompartmentCylindricalSurface;
+     CompartmentObject["frstmVol"]  = CompartmentFrustumVolume;
+     CompartmentObject["frstmSurf"] = CompartmentFrustumSurface;
+     CompartmentObject["length"]    = CompartmentLength;
+
+     //Change this. Not all the volumes input have volume IDs.
+     QJsonObject VolumeID;
+     VolumeID["x"] = this->vol_idx;
+     VolumeID["y"] = this->vol_idy;
+     VolumeID["z"] = this->vol_idz;
+
+     QJsonObject SampleTotal;
+     SampleTotal["CylindricalVolume"]    = this->total_cylvol;
+     SampleTotal["CylindricalSurface"]   = this->total_cylsurf;
+     SampleTotal["FrutsumVolume"]  = this->total_frstmvol;
+     SampleTotal["FrustumSurface"] = this->total_frstmsurf;
+     SampleTotal["Length"] = this->total_len;
+
+     SampleTotal["NumBifurcations"] = this->num_bifs;
+     SampleTotal["NumSegments"] = Segments.size();
+     SampleTotal["NumCompartments"] = CompartmentList.size();
+     SampleTotal["NumTerminals"] = this->num_terminals;
+
+     QJsonObject TubeDesc;
+     TubeDesc["VolumeID"] = VolumeID;
+     TubeDesc["Segments"] = SegmentObject;
      TubeDesc["Compartments"] = CompartmentObject;
-
-     TubeDesc["total_cylvol"]    = this->total_cylvol;
-     TubeDesc["total_cylsurf"]   = this->total_cylsurf;
-     TubeDesc["total_frstmvol"]  = this->total_frstmvol;
-     TubeDesc["total_frstmsurf"] = this->total_frstmsurf;
-     TubeDesc["total_length"] = this->total_len;
-
-     TubeDesc["NBifurcations"] = this->num_bifs;
-     TubeDesc["NSegments"] = Segments.size();
-     TubeDesc["NCompartments"] = CompartmentList.size();
-     TubeDesc["NTerminals"] = this->num_terminals;
-
-     TubeDesc["vol_idz"] = this->vol_idz;
-     TubeDesc["vol_idy"] = this->vol_idy;
-     TubeDesc["vol_idx"] = this->vol_idx;
+     TubeDesc["SampleTotal"] = SampleTotal;
 
      QJsonDocument saveDoc(TubeDesc);
      saveFile.write(this->Params == ParamsFormat::Json
