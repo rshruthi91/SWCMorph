@@ -12,8 +12,8 @@ private:
     QString infilepath;
     QFileInfo infileInfo;
     bool populated;
-    QString vtk_major_version = "2";
-    QString vtk_minor_version = "0";
+    QString vtk_major_version;
+    QString vtk_minor_version;
     void writeParams(QJsonObject &json);
 
     int num_bifs;

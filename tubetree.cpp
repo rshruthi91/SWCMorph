@@ -17,6 +17,8 @@ TubeTree::TubeTree()
 
 TubeTree::TubeTree(QString swcfile)
 {
+    this->vtk_major_version = "2";
+  this->vtk_minor_version = "0";
     this->populated = false;
     this->infilepath = swcfile;
     this->vol_idx = 100;
@@ -530,11 +532,11 @@ TubeTree::TubeTree(QString swcfile)
      CompartmentFrustumSurface["Average"]       =   this->avg_compsurffrstm;
      CompartmentLength["Average"]               =   this->avg_complen;
 
-     CompartmentObject["cylVol"]    = CompartmentCylindricalVolume;
-     CompartmentObject["cylSurf"]   = CompartmentCylindricalSurface;
-     CompartmentObject["frstmVol"]  = CompartmentFrustumVolume;
-     CompartmentObject["frstmSurf"] = CompartmentFrustumSurface;
-     CompartmentObject["length"]    = CompartmentLength;
+     CompartmentObject["CylindricalVolume"]    = CompartmentCylindricalVolume;
+     CompartmentObject["CylindricalSurface"]   = CompartmentCylindricalSurface;
+     CompartmentObject["FrutsumVolume"]  = CompartmentFrustumVolume;
+     CompartmentObject["FrustumSurface"] = CompartmentFrustumSurface;
+     CompartmentObject["Length"]    = CompartmentLength;
 
      //Change this. Not all the volumes input have volume IDs.
      QJsonObject VolumeID;
@@ -561,7 +563,7 @@ TubeTree::TubeTree(QString swcfile)
      TubeDesc["SampleTotal"] = SampleTotal;
 
      QJsonDocument saveDoc(TubeDesc);
-     saveFile.write(this->Params == ParamsFormat::Json
+     saveFile.write(this->Params == Json
          ? saveDoc.toJson()
          : saveDoc.toBinaryData());
 

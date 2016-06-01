@@ -4,8 +4,7 @@
 #define DEBUGPGM
 #define MAX_ARGS
 
-ParamsFormat writeParams(ParamsFormat::NoParams);
-ConvertFormat convertfile(ConvertFormat::NoConvert);
+ParamsFormat writeParams;
 
 int main(int argc, char *argv[])
 {
@@ -49,11 +48,11 @@ int main(int argc, char *argv[])
                 std::string inParamsFormat = argv[i];
                 if(inParamsFormat == "json"){
                     write_params = true;
-                    writeParams = ParamsFormat::Json;
+                    writeParams = Json;
                 }
                 else if(inParamsFormat == "dat"){
                     write_params = true;
-                    writeParams = ParamsFormat::Binary;
+                    writeParams = Binary;
                 }
                 else {
                     qDebug() << "Unsupported Params Format. Please use json or binary options only";
@@ -138,12 +137,12 @@ int main(int argc, char *argv[])
         }else{
             outputparamsfile = fi.absolutePath()+"/"+fi.baseName()+".json";
         }
-        if(writeParams==ParamsFormat::Json){
+        if(writeParams==Json){
             if(tubetree.writeJson(outputparamsfile)) {
                 qDebug() << "Wrote Params file";
             }else return EXIT_FAILURE;
         }
-        else if(writeParams==ParamsFormat::Binary){
+        else if(writeParams==Binary){
             if(tubetree.writeDat(outputparamsfile)){
                 qDebug() << "Wrote Params File";
             } else return EXIT_FAILURE;
